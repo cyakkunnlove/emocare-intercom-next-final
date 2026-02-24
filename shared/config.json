@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "EmoCare Intercom Next",
+    "version": "1.0.0",
+    "bundle_id": "com.emocare.intercom.next",
+    "description": "LINEレベル品質VoIPインターコムアプリ"
+  },
+  "targets": {
+    "ios": {
+      "min_version": "15.0",
+      "swift_version": "5.9",
+      "xcode_version": "15.0"
+    },
+    "android": {
+      "min_sdk": 26,
+      "target_sdk": 34,
+      "kotlin_version": "1.9.10",
+      "compose_bom": "2024.02.00"
+    }
+  },
+  "services": {
+    "supabase": {
+      "url": "https://your-supabase-url.supabase.co",
+      "public_key": "your-public-anon-key"
+    },
+    "livekit": {
+      "url": "wss://your-livekit-url",
+      "api_key": "your-api-key",
+      "secret": "your-secret"
+    }
+  },
+  "features": {
+    "voip": true,
+    "ptt": true,
+    "channels": true,
+    "emergency": true,
+    "call_history": true,
+    "push_notifications": true
+  },
+  "quality": {
+    "startup_time_ms": 1000,
+    "ptt_response_ms": 100,
+    "voip_latency_ms": 150,
+    "notification_success_rate": 0.999,
+    "crash_rate": 0.0001
+  }
+}
