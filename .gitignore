@@ -87,3 +87,6 @@ Gemfile.lock
 # Documentation temp
 docs/temp/
 *.pdf
+# Firebase secrets
+android/app/google-services.json
+ios/GoogleService-Info.plist
