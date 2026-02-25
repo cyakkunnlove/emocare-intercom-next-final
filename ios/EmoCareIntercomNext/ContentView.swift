@@ -108,42 +108,7 @@ struct MainTabView: View {
     }
 }
 
-// MARK: - Placeholder Views
-struct ChannelsView: View {
-    var body: some View {
-        NavigationView {
-            VStack {
-                Image(systemName: "rectangle.3.group.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.blue)
-                Text("チャンネル一覧")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                Text("近日実装予定")
-                    .foregroundColor(.secondary)
-            }
-            .navigationTitle("チャンネル")
-        }
-    }
-}
-
-struct CallHistoryView: View {
-    var body: some View {
-        NavigationView {
-            VStack {
-                Image(systemName: "clock.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.green)
-                Text("通話履歴")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                Text("近日実装予定")
-                    .foregroundColor(.secondary)
-            }
-            .navigationTitle("履歴")
-        }
-    }
-}
+// Placeholder views removed - using actual implementations from Features/
 
 struct CallOverlayView: View {
     @EnvironmentObject private var callManager: CallManager

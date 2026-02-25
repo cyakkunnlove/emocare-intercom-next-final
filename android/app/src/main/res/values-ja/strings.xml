@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">EmoCare Pocket</string>
+    
+    <!-- Login Screen -->
+    <string name="login_title">EmoCare Pocket</string>
+    <string name="login_subtitle">ログインして管理画面に進みます</string>
+    <string name="email_label">メールアドレス</string>
+    <string name="email_placeholder">example@facility.com</string>
+    <string name="password_label">パスワード</string>
+    <string name="password_placeholder">パスワードを入力</string>
+    <string name="login_button">ログイン</string>
+    
+    <!-- Error Messages -->
+    <string name="error_email_empty">メールアドレスを入力してください</string>
+    <string name="error_password_empty">パスワードを入力してください</string>
+    <string name="error_email_invalid">正しいメールアドレスを入力してください</string>
+    <string name="error_invalid_credentials">メールアドレスまたはパスワードが正しくありません</string>
+    <string name="error_email_not_confirmed">メールアドレスの確認が完了していません</string>
+    <string name="error_too_many_requests">ログイン試行回数が多すぎます。しばらく待ってから再試行してください</string>
+    <string name="error_network">ネットワーク接続を確認してください</string>
+    <string name="error_login_failed">ログインに失敗しました</string>
+    
+    <!-- Context Menu Actions (完全日本語対応) -->
+    <string name="action_cut">切り取り</string>
+    <string name="action_copy">コピー</string>
+    <string name="action_paste">貼り付け</string>
+    <string name="action_select_all">すべて選択</string>
+    <string name="action_undo">元に戻す</string>
+    <string name="action_redo">やり直し</string>
+</resources>

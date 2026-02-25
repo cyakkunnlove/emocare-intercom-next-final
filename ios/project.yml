@@ -1,0 +1,81 @@
+name: EmoCareIntercomNext
+targets:
+  EmoCareIntercomNext:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: EmoCareIntercomNext
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.emocare.intercom.next
+      MARKETING_VERSION: "1.0.0"
+      CURRENT_PROJECT_VERSION: "1"
+      SWIFT_VERSION: "5.9"
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+      CODE_SIGN_ENTITLEMENTS: EmoCareIntercomNext/EmoCareIntercomNext.entitlements
+      INFOPLIST_FILE: EmoCareIntercomNext/Info.plist
+      DEVELOPMENT_TEAM: "$(DEVELOPMENT_TEAM)"
+      CODE_SIGN_STYLE: Automatic
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      # Supabase Swift SDK
+      - package: supabase-swift
+        product: Supabase
+      # LiveKit Swift SDK  
+      - package: client-sdk-swift
+        product: LiveKit
+      # KeychainAccess for secure storage
+      - package: KeychainAccess
+        product: KeychainAccess
+    
+packages:
+  supabase-swift:
+    url: https://github.com/supabase/supabase-swift
+    exactVersion: "2.5.0"
+  client-sdk-swift:
+    url: https://github.com/livekit/client-sdk-swift
+    exactVersion: "2.0.4"
+  KeychainAccess:
+    url: https://github.com/kishikawakatsumi/KeychainAccess
+    exactVersion: "4.2.2"
+
+options:
+  bundleIdPrefix: com.emocare.intercom.next
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  groupSortPosition: top
+  generateEmptyDirectories: false
+  
+schemes:
+  EmoCareIntercomNext:
+    build:
+      targets:
+        EmoCareIntercomNext: all
+    run:
+      config: Debug
+      commandLineArguments:
+        "-com.apple.CoreData.ConcurrencyDebug": "1"
+        "-com.apple.CoreData.SQLDebug": "1"
+    test:
+      config: Debug
+      gatherCoverageData: true
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+configurations:
+  Debug:
+    SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+    SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+    GCC_OPTIMIZATION_LEVEL: "0"
+    ENABLE_TESTABILITY: true
+    DEBUG_INFORMATION_FORMAT: dwarf
+  Release:
+    SWIFT_OPTIMIZATION_LEVEL: "-O"
+    GCC_OPTIMIZATION_LEVEL: "s"
+    ENABLE_TESTABILITY: false
+    DEBUG_INFORMATION_FORMAT: "dwarf-with-dsym"
