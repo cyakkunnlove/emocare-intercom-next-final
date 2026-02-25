@@ -8,23 +8,31 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                // ユーザー情報セクション
-                UserInfoSection()
-                
-                // 音声設定セクション
-                AudioSettingsSection()
-                
-                // アプリ設定セクション
-                AppSettingsSection()
-                
-                // アカウント管理セクション
-                AccountSection()
-                
-                // 情報セクション
-                InfoSection()
+            VStack(spacing: 0) {
+                ScreenHeader()
+
+                List {
+                    // ユーザー情報セクション
+                    UserInfoSection()
+                    
+                    // 音声設定セクション
+                    AudioSettingsSection()
+                    
+                    // アプリ設定セクション
+                    AppSettingsSection()
+                    
+                    // アカウント管理セクション
+                    AccountSection()
+                    
+                    // 情報セクション
+                    InfoSection()
+                }
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: 96)
+                }
             }
-            .navigationTitle("設定")
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .navigationBarHidden(true)
             .alert("ログアウト", isPresented: $showingLogoutConfirmation) {
                 Button("キャンセル", role: .cancel) { }
                 Button("ログアウト", role: .destructive) {
@@ -39,6 +47,19 @@ struct SettingsView: View {
                 AboutView()
             }
         }
+    }
+
+    @ViewBuilder
+    private func ScreenHeader() -> some View {
+        HStack {
+            Text("設定")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
     }
     
     // MARK: - User Info Section

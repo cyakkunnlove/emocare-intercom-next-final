@@ -12,18 +12,25 @@ struct ChannelsView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                ScreenHeader()
+
                 // 検索バー
                 SearchBar()
                 
                 // チャンネルリスト
                 ChannelsList()
-                
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .navigationBarHidden(true)
+            .overlay(alignment: .bottomTrailing) {
                 // フローティング作成ボタン (管理者のみ)
                 if authManager.user?.role == .admin || authManager.user?.role == .manager {
                     CreateChannelFloatingButton()
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 96)
                 }
             }
-            .navigationTitle("チャンネル")
             .refreshable {
                 await viewModel.refreshChannels()
             }
@@ -47,6 +54,19 @@ struct ChannelsView: View {
             CreateChannelView()
         }
     }
+
+    @ViewBuilder
+    private func ScreenHeader() -> some View {
+        HStack {
+            Text("チャンネル")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+    }
     
     // MARK: - Search Bar
     @ViewBuilder
@@ -57,7 +77,7 @@ struct ChannelsView: View {
             
             TextField("チャンネルを検索", text: $searchText)
                 .textFieldStyle(PlainTextFieldStyle())
-                .onChange(of: searchText) { _, newValue in
+                .onChange(of: searchText) { newValue in
                     viewModel.searchChannels(query: newValue)
                 }
         }
@@ -97,6 +117,9 @@ struct ChannelsView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 100) // フローティングボタンのスペース
             }
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 96)
+            }
         }
     }
     
@@ -120,12 +143,12 @@ struct ChannelsView: View {
             Image(systemName: "rectangle.3.group")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
-            
+
             VStack(spacing: 8) {
                 Text("チャンネルがありません")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 if searchText.isEmpty {
                     Text("管理者にお問い合わせください")
                         .foregroundColor(.secondary)
@@ -135,40 +158,34 @@ struct ChannelsView: View {
                         .multilineTextAlignment(.center)
                 }
             }
-            
+
             if searchText.isEmpty && (authManager.user?.role == .admin || authManager.user?.role == .manager) {
                 Button("最初のチャンネルを作成") {
                     showingCreateChannel = true
                 }
                 .buttonStyle(.borderedProminent)
             }
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal)
+        .padding(.top, 24)
     }
     
     // MARK: - Floating Create Button
     @ViewBuilder
     private func CreateChannelFloatingButton() -> some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                Button(action: {
-                    showingCreateChannel = true
-                }) {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.blue)
-                        .clipShape(Circle())
-                        .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                }
-                .padding(.trailing, 20)
-                .padding(.bottom, 20)
-            }
+        Button(action: {
+            showingCreateChannel = true
+        }) {
+            Image(systemName: "plus")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(width: 56, height: 56)
+                .background(Color.blue)
+                .clipShape(Circle())
+                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
         }
     }
 }

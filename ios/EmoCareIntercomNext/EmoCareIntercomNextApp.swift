@@ -5,7 +5,7 @@ import CallKit
 @main
 struct EmoCareIntercomNextApp: App {
     @StateObject private var appState = AppState()
-    @StateObject private var authManager = AuthenticationManager()
+    @StateObject private var authManager = AuthenticationManager.shared
     @StateObject private var callManager = CallManager()
     @StateObject private var audioManager = AudioManager()
     
@@ -34,9 +34,32 @@ struct EmoCareIntercomNextApp: App {
     }
     
     private func setupAppearance() {
-        // アプリのビジュアル設定
-        UINavigationBar.appearance().tintColor = UIColor(Color.primary)
-        UITabBar.appearance().backgroundColor = UIColor.systemBackground
+        // ナビゲーションバーを固定表示にして、タイトル重なりを防ぐ
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithOpaqueBackground()
+        navAppearance.backgroundColor = .systemBackground
+        navAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+        navAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+
+        let navBar = UINavigationBar.appearance()
+        navBar.standardAppearance = navAppearance
+        navBar.scrollEdgeAppearance = navAppearance
+        navBar.compactAppearance = navAppearance
+        navBar.prefersLargeTitles = false
+        navBar.tintColor = .systemBlue
+
+        // タブバーを全幅・不透明で表示
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithOpaqueBackground()
+        tabAppearance.backgroundColor = .systemBackground
+
+        let tabBar = UITabBar.appearance()
+        tabBar.standardAppearance = tabAppearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = tabAppearance
+        }
+        tabBar.isTranslucent = false
+        tabBar.tintColor = .systemBlue
     }
     
     private func setupPushNotifications() {

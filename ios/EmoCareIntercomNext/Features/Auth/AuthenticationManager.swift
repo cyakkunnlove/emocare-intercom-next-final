@@ -3,6 +3,8 @@ import Combine
 
 @MainActor
 class AuthenticationManager: ObservableObject {
+    static let shared = AuthenticationManager()
+
     @Published var isAuthenticated = false
     @Published var isLoading = false
     @Published var user: User?
@@ -94,11 +96,9 @@ class AuthenticationManager: ObservableObject {
     // MARK: - Private Methods
     
     private func checkSavedAuthState() {
-        // Keychainから保存された認証情報をチェック
-        if let savedToken = KeychainHelper.getAuthToken() {
-            Task {
-                await checkAuthStatus()
-            }
+        // Supabaseセッションの有無を直接確認
+        Task {
+            await checkAuthStatus()
         }
     }
     

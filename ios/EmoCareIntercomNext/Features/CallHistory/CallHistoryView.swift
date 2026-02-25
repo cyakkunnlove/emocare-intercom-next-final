@@ -10,6 +10,8 @@ struct CallHistoryView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                ScreenHeader()
+
                 // 検索・フィルターバー
                 SearchAndFilterBar()
                 
@@ -19,7 +21,8 @@ struct CallHistoryView: View {
                 // 通話履歴リスト
                 CallHistoryListView()
             }
-            .navigationTitle("通話履歴")
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .navigationBarHidden(true)
             .refreshable {
                 await viewModel.refreshCallHistory()
             }
@@ -46,6 +49,19 @@ struct CallHistoryView: View {
             )
         }
     }
+
+    @ViewBuilder
+    private func ScreenHeader() -> some View {
+        HStack {
+            Text("通話履歴")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+    }
     
     // MARK: - Search and Filter Bar
     @ViewBuilder
@@ -58,7 +74,7 @@ struct CallHistoryView: View {
                 
                 TextField("通話を検索", text: $searchText)
                     .textFieldStyle(PlainTextFieldStyle())
-                    .onChange(of: searchText) { _, newValue in
+                    .onChange(of: searchText) { newValue in
                         viewModel.searchCalls(query: newValue)
                     }
                 
@@ -107,38 +123,39 @@ struct CallHistoryView: View {
     @ViewBuilder
     private func StatisticsSummaryView() -> some View {
         if !viewModel.isLoading {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    StatisticCardView(
-                        title: "今日",
-                        value: "\(viewModel.statistics.todayCalls)",
-                        subtitle: "回",
-                        color: .blue
-                    )
-                    
-                    StatisticCardView(
-                        title: "今週",
-                        value: "\(viewModel.statistics.weekCalls)",
-                        subtitle: "回",
-                        color: .green
-                    )
-                    
-                    StatisticCardView(
-                        title: "平均時間",
-                        value: viewModel.statistics.averageDurationString,
-                        subtitle: "",
-                        color: .orange
-                    )
-                    
-                    StatisticCardView(
-                        title: "緊急通話",
-                        value: "\(viewModel.statistics.emergencyCalls)",
-                        subtitle: "回",
-                        color: .red
-                    )
-                }
-                .padding(.horizontal)
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
+                spacing: 12
+            ) {
+                StatisticCardView(
+                    title: "今日",
+                    value: "\(viewModel.statistics.todayCalls)",
+                    subtitle: "回",
+                    color: .blue
+                )
+
+                StatisticCardView(
+                    title: "今週",
+                    value: "\(viewModel.statistics.weekCalls)",
+                    subtitle: "回",
+                    color: .green
+                )
+
+                StatisticCardView(
+                    title: "平均時間",
+                    value: viewModel.statistics.averageDurationString,
+                    subtitle: "",
+                    color: .orange
+                )
+
+                StatisticCardView(
+                    title: "緊急通話",
+                    value: "\(viewModel.statistics.emergencyCalls)",
+                    subtitle: "回",
+                    color: .red
+                )
             }
+            .padding(.horizontal)
             .padding(.vertical, 12)
             .background(Color(.systemGray6))
         }
@@ -165,6 +182,9 @@ struct CallHistoryView: View {
                 }
             }
             .listStyle(PlainListStyle())
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 96)
+            }
         }
     }
     
@@ -177,8 +197,11 @@ struct CallHistoryView: View {
             
             Text("通話履歴を読み込み中...")
                 .foregroundColor(.secondary)
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, 24)
     }
     
     // MARK: - Empty State
@@ -203,9 +226,12 @@ struct CallHistoryView: View {
                         .multilineTextAlignment(.center)
                 }
             }
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal)
+        .padding(.top, 24)
     }
     
     // MARK: - Computed Properties
@@ -264,7 +290,7 @@ struct StatisticCardView: View {
                 }
             }
         }
-        .frame(width: 80)
+        .frame(maxWidth: .infinity, minHeight: 72)
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)

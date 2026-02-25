@@ -118,9 +118,8 @@ struct CreateChannelView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
                 
-                TextField("チャンネルの用途を説明", text: $channelDescription, axis: .vertical)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .lineLimit(3...6)
+                TextEditor(text: $channelDescription)
+                    .frame(minHeight: 80, maxHeight: 140)
                     .focused($focusedField, equals: .description)
                     .padding()
                     .background(Color(.systemGray6))
@@ -454,8 +453,8 @@ struct ChannelSettingsView: View {
         NavigationView {
             Form {
                 TextField("チャンネル名", text: $editedName)
-                TextField("説明", text: $editedDescription, axis: .vertical)
-                    .lineLimit(3...6)
+                TextEditor(text: $editedDescription)
+                    .frame(minHeight: 80, maxHeight: 140)
             }
             .navigationTitle("チャンネル編集")
             .navigationBarTitleDisplayMode(.inline)
@@ -509,7 +508,7 @@ class ChannelSettingsViewModel: ObservableObject {
     
     func loadStatistics(for channelId: String) async {
         // TODO: Supabaseからチャンネル統計を取得
-        await Task.sleep(nanoseconds: 500_000_000)
+        try? await Task.sleep(nanoseconds: 500_000_000)
         
         statistics = ChannelStatistics(
             totalCalls: Int.random(in: 50...200),

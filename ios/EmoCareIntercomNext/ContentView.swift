@@ -121,7 +121,9 @@ struct CallOverlayView: View {
                     .fontWeight(.semibold)
                 Spacer()
                 Button("終了") {
-                    callManager.endCall()
+                    Task {
+                        await callManager.endCall()
+                    }
                 }
                 .foregroundColor(.red)
             }

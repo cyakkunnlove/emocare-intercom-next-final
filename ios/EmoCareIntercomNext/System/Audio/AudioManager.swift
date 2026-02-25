@@ -11,7 +11,8 @@ class AudioManager: ObservableObject {
     @Published var audioRoute: AudioRoute = .earpiece
     @Published var errorMessage: String?
     
-    private let audioSession = AVAudioSession.sharedInstance()
+    // Shared/Models/AudioRoute.swift の extension から参照するため internal にする
+    let audioSession = AVAudioSession.sharedInstance()
     private var cancellables = Set<AnyCancellable>()
     
     init() {
@@ -95,7 +96,7 @@ class AudioManager: ObservableObject {
         }
         
         // TODO: LiveKit音声クライアントでマイクON/OFF
-        await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機（模擬）
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒待機（模擬）
         
         await MainActor.run {
             self.isMicrophoneEnabled = enabled
@@ -242,46 +243,4 @@ class AudioManager: ObservableObject {
         }
     }
     
-    private func updateAudioRoute() {
-        let currentRoute = audioSession.currentRoute
-        
-        if currentRoute.outputs.contains(where: { $0.portType == .bluetoothA2DP || $0.portType == .bluetoothHFP }) {
-            audioRoute = .bluetooth
-        } else if currentRoute.outputs.contains(where: { $0.portType == .headphones || $0.portType == .bluetoothLE }) {
-            audioRoute = .wiredHeadphones
-        } else if currentRoute.outputs.contains(where: { $0.portType == .builtInSpeaker }) {
-            audioRoute = .speaker
-        } else {
-            audioRoute = .earpiece
-        }
-        
-        print("🎧 Audio route updated to: \(audioRoute)")
-    }
-}
-
-// MARK: - Audio Route
-
-enum AudioRoute {
-    case earpiece
-    case speaker
-    case wiredHeadphones
-    case bluetooth
-    
-    var displayName: String {
-        switch self {
-        case .earpiece: return "レシーバー"
-        case .speaker: return "スピーカー"
-        case .wiredHeadphones: return "ヘッドフォン"
-        case .bluetooth: return "Bluetooth"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .earpiece: return "iphone"
-        case .speaker: return "speaker.wave.2"
-        case .wiredHeadphones: return "headphones"
-        case .bluetooth: return "beats.headphones"
-        }
-    }
 }

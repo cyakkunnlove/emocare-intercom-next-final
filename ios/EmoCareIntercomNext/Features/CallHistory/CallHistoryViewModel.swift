@@ -35,7 +35,7 @@ class CallHistoryViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            guard let user = AuthenticationManager().user else {
+            guard let user = AuthenticationManager.shared.user else {
                 throw CallHistoryError.userNotAuthenticated
             }
             
@@ -82,7 +82,7 @@ class CallHistoryViewModel: ObservableObject {
     }
     
     func deleteCallRecord(_ call: CallRecord) async throws {
-        guard let user = AuthenticationManager().user else {
+        guard let user = AuthenticationManager.shared.user else {
             throw CallHistoryError.userNotAuthenticated
         }
         
@@ -92,7 +92,7 @@ class CallHistoryViewModel: ObservableObject {
         }
         
         // TODO: Supabaseから通話記録を削除
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
         
         await MainActor.run {
             self.calls.removeAll { $0.id == call.id }
@@ -105,7 +105,7 @@ class CallHistoryViewModel: ObservableObject {
     
     func getCallDetails(_ callId: String) async throws -> CallDetails {
         // TODO: Supabaseから詳細な通話情報を取得
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
         
         // モック実装
         return CallDetails(

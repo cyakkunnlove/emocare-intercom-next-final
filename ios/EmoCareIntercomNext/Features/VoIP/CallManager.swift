@@ -182,7 +182,7 @@ class CallManager: NSObject, ObservableObject {
     
     private func connectVoice(call: Call) async {
         // TODO: LiveKit音声接続を実装
-        await Task.sleep(nanoseconds: 1_000_000_000) // 1秒待機（模擬）
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1秒待機（模擬）
         
         await MainActor.run {
             self.callState = .connected
@@ -193,7 +193,7 @@ class CallManager: NSObject, ObservableObject {
     
     private func disconnectVoice() async {
         // TODO: LiveKit音声切断を実装
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機（模擬）
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機（模擬）
         
         print("✅ Voice disconnected")
     }
@@ -202,7 +202,7 @@ class CallManager: NSObject, ObservableObject {
 // MARK: - CXProviderDelegate
 
 extension CallManager: CXProviderDelegate {
-    func providerDidReset(_ provider: CXProvider) {
+    nonisolated func providerDidReset(_ provider: CXProvider) {
         print("✅ CallKit provider reset")
         Task { @MainActor in
             self.currentCall = nil
@@ -211,32 +211,29 @@ extension CallManager: CXProviderDelegate {
         }
     }
     
-    func provider(_ provider: CXProvider, perform action: CXStartCallAction) -> Bool {
+    nonisolated func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
         print("✅ CallKit start call action")
         action.fulfill()
-        return true
     }
     
-    func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) -> Bool {
+    nonisolated func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
         print("✅ CallKit answer call action")
         action.fulfill()
-        return true
     }
     
-    func provider(_ provider: CXProvider, perform action: CXEndCallAction) -> Bool {
+    nonisolated func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
         print("✅ CallKit end call action")
         action.fulfill()
-        return true
     }
     
-    func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
+    nonisolated func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
         print("✅ CallKit audio session activated")
         Task {
             await AudioManager.shared.activateAudioSession()
         }
     }
     
-    func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
+    nonisolated func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
         print("✅ CallKit audio session deactivated")
         Task {
             await AudioManager.shared.deactivateAudioSession()

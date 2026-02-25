@@ -82,7 +82,7 @@ class PTTManager: ObservableObject {
             let duration = Date().timeIntervalSince(startTime)
             if duration < minRecordingDuration {
                 print("⚠️ Recording too short (\(duration)s), extending...")
-                await Task.sleep(nanoseconds: UInt64((minRecordingDuration - duration) * 1_000_000_000))
+                try? await Task.sleep(nanoseconds: UInt64((minRecordingDuration - duration) * 1_000_000_000))
             }
         }
         

@@ -44,7 +44,7 @@ struct ChannelDetailView: View {
         .task {
             await loadChannelDetails()
         }
-        .onChange(of: liveKitService.isConnected) { _, isConnected in
+        .onChange(of: liveKitService.isConnected) { isConnected in
             isConnectedToVoice = isConnected
         }
         .sheet(isPresented: $showingSettings) {
@@ -117,7 +117,7 @@ struct ChannelDetailView: View {
         .overlay(
             Rectangle()
                 .frame(height: 1)
-                .foregroundColor(.separator),
+                .foregroundColor(Color(uiColor: .separator)),
             alignment: .bottom
         )
     }
@@ -269,7 +269,7 @@ struct ChannelDetailView: View {
     private func loadParticipants() async {
         // TODO: Supabaseからチャンネル参加者を取得
         // モック実装
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
         
         let mockParticipants = [
             ChannelParticipant(

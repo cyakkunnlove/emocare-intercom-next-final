@@ -131,14 +131,14 @@ class VoIPPushManager: NSObject, PKPushRegistryDelegate {
     private func registerTokenWithServer(_ token: String) async throws {
         // TODO: Supabase API呼び出しでトークン登録
         // モック実装
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
         print("✅ Token registered with server (mock)")
     }
     
     private func unregisterTokenWithServer(_ token: String) async throws {
         // TODO: Supabase API呼び出しでトークン削除
         // モック実装
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
         print("✅ Token unregistered from server (mock)")
     }
 }

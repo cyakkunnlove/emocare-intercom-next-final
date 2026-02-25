@@ -1,88 +1,102 @@
 import Foundation
 import Combine
+import Supabase
 
 class SupabaseService: ObservableObject {
     static let shared = SupabaseService()
-    
-    // TODO: Supabase Swift SDKを統合後、実装を完了
-    private let supabaseURL = "https://your-supabase-url.supabase.co"
-    private let supabaseKey = "your-supabase-anon-key"
-    
+
+    // EmoCare本体と同じSupabaseプロジェクトを利用
+    private let supabaseClient: SupabaseClient
+
     private init() {
-        // Supabase初期化
+        self.supabaseClient = SupabaseClient(
+            supabaseURL: URL(string: "https://vivhqjpmkorbxebtncxi.supabase.co")!,
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpdmhxanBta29yYnhlYnRuY3hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NzIyMjgsImV4cCI6MjA2NTU0ODIyOH0.7ex5q2skY1bhBMkGS_FfR4wwjRs3uOadcngMHtvTLOk"
+        )
     }
-    
+
     // MARK: - Authentication
-    
+
     func getCurrentUser() async throws -> User? {
-        // TODO: Supabase Authからユーザー情報を取得
-        
-        // モック実装
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
-        
-        // 開発用モックユーザー
-        if let mockUser = createMockUser() {
-            return mockUser
-        }
-        
-        return nil
-    }
-    
-    func signIn(email: String, password: String) async throws -> User {
-        // TODO: Supabase Authでサインイン
-        
-        // バリデーション
-        guard isValidEmail(email) else {
-            throw SupabaseError.invalidEmail
-        }
-        
-        guard password.count >= 6 else {
-            throw SupabaseError.weakPassword
-        }
-        
-        // モック実装
-        await Task.sleep(nanoseconds: 1_000_000_000) // 1秒待機
-        
-        // 開発用の認証ロジック
-        if email == "test@emocare.com" && password == "password123" {
-            let user = User(
-                id: UUID().uuidString,
-                email: email,
-                name: "テストユーザー",
-                facilityId: "facility-001",
+        do {
+            let session = try await supabaseClient.auth.session
+            let userId = session.user.id.uuidString
+            let fallbackEmail = session.user.email ?? ""
+
+            if let profileUser = try await fetchUserProfile(userId: userId, fallbackEmail: fallbackEmail) {
+                return profileUser
+            }
+
+            return User(
+                id: userId,
+                email: fallbackEmail,
+                name: nil,
+                facilityId: nil,
                 role: .staff,
                 createdAt: Date(),
                 updatedAt: Date()
             )
-            
-            // トークンを保存
-            try await saveAuthToken(for: user)
-            
-            return user
-        } else {
-            throw SupabaseError.invalidCredentials
+        } catch {
+            return nil
         }
     }
-    
+
+    func signIn(email: String, password: String) async throws -> User {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard isValidEmail(normalizedEmail) else {
+            throw SupabaseError.invalidEmail
+        }
+
+        guard normalizedPassword.count >= 6 else {
+            throw SupabaseError.weakPassword
+        }
+
+        do {
+            let response = try await supabaseClient.auth.signIn(
+                email: normalizedEmail,
+                password: normalizedPassword
+            )
+
+            let session = try await supabaseClient.auth.session
+            KeychainHelper.saveAuthToken(session.accessToken)
+
+            let userId = response.user.id.uuidString
+            let fallbackEmail = response.user.email ?? normalizedEmail
+
+            if let profileUser = try await fetchUserProfile(userId: userId, fallbackEmail: fallbackEmail) {
+                return profileUser
+            }
+
+            return User(
+                id: userId,
+                email: fallbackEmail,
+                name: nil,
+                facilityId: nil,
+                role: .staff,
+                createdAt: Date(),
+                updatedAt: Date()
+            )
+        } catch {
+            let message = error.localizedDescription.lowercased()
+            if message.contains("invalid login credentials") || message.contains("email") || message.contains("password") {
+                throw SupabaseError.invalidCredentials
+            }
+            throw SupabaseError.serverError(error.localizedDescription)
+        }
+    }
+
     func signOut() async throws {
-        // TODO: Supabase Authからサインアウト
-        
-        await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
-        
-        // トークンを削除
+        try await supabaseClient.auth.signOut()
         KeychainHelper.clearAuthToken()
-        
         print("✅ Signed out successfully")
     }
-    
+
     // MARK: - Database Operations
-    
+
     func fetchChannels(facilityId: String) async throws -> [Channel] {
-        // TODO: Supabaseからチャンネル一覧を取得
-        
-        await Task.sleep(nanoseconds: 500_000_000)
-        
-        // モックデータ
+        // Intercom専用テーブル未整備のため、当面はアプリ側チャンネルを返す
         return [
             Channel(
                 id: "channel-001",
@@ -104,13 +118,9 @@ class SupabaseService: ObservableObject {
             )
         ]
     }
-    
+
     func fetchCallHistory(userId: String) async throws -> [CallRecord] {
-        // TODO: Supabaseから通話履歴を取得
-        
-        await Task.sleep(nanoseconds: 500_000_000)
-        
-        // モックデータ
+        // Intercom専用通話テーブル未整備のため、当面はモックを返す
         return [
             CallRecord(
                 id: "call-001",
@@ -124,45 +134,80 @@ class SupabaseService: ObservableObject {
             )
         ]
     }
-    
+
     // MARK: - Realtime Subscriptions
-    
+
     func subscribeToChannelUpdates(channelId: String) async -> AsyncStream<ChannelUpdate> {
-        // TODO: Supabase Realtimeでチャンネル更新を監視
-        
         return AsyncStream { continuation in
-            // モック実装
             Task {
                 while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: 5_000_000_000) // 5秒
+                    try? await Task.sleep(nanoseconds: 5_000_000_000)
                     continuation.yield(.memberJoined("mock-user"))
                 }
             }
         }
     }
-    
+
     // MARK: - Private Methods
-    
-    private func createMockUser() -> User? {
-        if KeychainHelper.getAuthToken() != nil {
-            return User(
-                id: "user-001",
-                email: "test@emocare.com",
-                name: "テストユーザー",
-                facilityId: "facility-001",
-                role: .staff,
-                createdAt: Date().addingTimeInterval(-86400),
-                updatedAt: Date()
-            )
+
+    private func fetchUserProfile(userId: String, fallbackEmail: String) async throws -> User? {
+        let response = try await supabaseClient.database
+            .from("users")
+            .select("id,email,first_name,last_name,role,facility_id,created_at,updated_at")
+            .eq("id", value: userId)
+            .limit(1)
+            .execute()
+
+        guard
+            let json = try JSONSerialization.jsonObject(with: response.data) as? [[String: Any]],
+            let row = json.first
+        else {
+            return nil
         }
-        return nil
+
+        let firstName = row["first_name"] as? String ?? ""
+        let lastName = row["last_name"] as? String ?? ""
+        let fullName = "\(lastName)\(firstName)".trimmingCharacters(in: .whitespacesAndNewlines)
+        let name: String? = fullName.isEmpty ? nil : fullName
+
+        let email = (row["email"] as? String) ?? fallbackEmail
+        let role = mapRole(row["role"] as? String)
+        let facilityId = row["facility_id"] as? String
+        let createdAt = parseDate(row["created_at"])
+        let updatedAt = parseDate(row["updated_at"])
+
+        return User(
+            id: userId,
+            email: email,
+            name: name,
+            facilityId: facilityId,
+            role: role,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
     }
-    
-    private func saveAuthToken(for user: User) async throws {
-        let token = "mock-auth-token-\(user.id)"
-        KeychainHelper.saveAuthToken(token)
+
+    private func mapRole(_ value: String?) -> UserRole {
+        switch value {
+        case "system_admin":
+            return .admin
+        case "facility_manager":
+            return .manager
+        default:
+            return .staff
+        }
     }
-    
+
+    private func parseDate(_ value: Any?) -> Date {
+        if let dateString = value as? String {
+            let formatter = ISO8601DateFormatter()
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+        return Date()
+    }
+
     private func isValidEmail(_ email: String) -> Bool {
         let emailRegex = #"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
         return email.range(of: emailRegex, options: .regularExpression) != nil
@@ -173,12 +218,12 @@ class SupabaseService: ObservableObject {
 
 struct Channel: Codable, Identifiable {
     let id: String
-    let name: String
-    let description: String
+    var name: String
+    var description: String
     let facilityId: String
     let isEmergencyChannel: Bool
     let createdAt: Date
-    let updatedAt: Date
+    var updatedAt: Date
 }
 
 struct CallRecord: Codable, Identifiable {
@@ -187,7 +232,7 @@ struct CallRecord: Codable, Identifiable {
     let callerId: String
     let startTime: Date
     let endTime: Date?
-    let duration: Int // seconds
+    let duration: Int
     let callType: CallType
     let isEmergency: Bool
 }
@@ -213,7 +258,7 @@ enum SupabaseError: LocalizedError {
     case invalidCredentials
     case networkError
     case serverError(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidEmail:

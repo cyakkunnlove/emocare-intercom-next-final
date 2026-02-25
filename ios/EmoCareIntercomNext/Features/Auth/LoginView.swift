@@ -24,6 +24,9 @@ struct LoginView: View {
                     
                     // ログインボタン
                     LoginButtonView()
+
+                    // エラー表示
+                    LoginErrorView()
                     
                     // フッター
                     FooterView()
@@ -170,6 +173,17 @@ struct LoginView: View {
         }
         .disabled(!isLoginButtonEnabled)
         .animation(.easeInOut(duration: 0.2), value: isLoginButtonEnabled)
+    }
+
+    @ViewBuilder
+    private func LoginErrorView() -> some View {
+        if let errorMessage = authManager.errorMessage, !errorMessage.isEmpty {
+            Text(errorMessage)
+                .font(.caption)
+                .foregroundColor(.red)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+        }
     }
     
     // MARK: - Footer

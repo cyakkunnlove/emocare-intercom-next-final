@@ -133,7 +133,7 @@ extension KeychainHelper {
             return "One or more parameters passed to a function were not valid"
         case errSecAllocate:
             return "Failed to allocate memory"
-        case errSecUserCancel:
+        case errSecUserCanceled:
             return "User canceled the operation"
         case errSecBadReq:
             return "Bad parameter or invalid state for operation"
