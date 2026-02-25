@@ -10,48 +10,54 @@ struct ChannelsView: View {
     @State private var showingCreateChannel = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                ScreenHeader()
+        // 端末ごとの safe area からタブバー領域を動的に算出する
+        GeometryReader { geometry in
+            let safeAreaBottom = geometry.safeAreaInsets.bottom
+            let bottomInset = TabbedScreenLayout.contentBottomInset(safeAreaBottom: safeAreaBottom)
 
-                // 検索バー
-                SearchBar()
-                
-                // チャンネルリスト
-                ChannelsList()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .navigationBarHidden(true)
-            .overlay(alignment: .bottomTrailing) {
-                // フローティング作成ボタン (管理者のみ)
-                if authManager.user?.role == .admin || authManager.user?.role == .manager {
-                    CreateChannelFloatingButton()
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 96)
+            NavigationView {
+                VStack(spacing: 0) {
+                    ScreenHeader()
+
+                    // 検索バー
+                    SearchBar()
+                    
+                    // チャンネルリスト
+                    ChannelsList(bottomInset: bottomInset)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .navigationBarHidden(true)
+                .overlay(alignment: .bottomTrailing) {
+                    // タブバー高さを考慮して + ボタンを重ならない位置へ配置する
+                    if authManager.user?.role == .admin || authManager.user?.role == .manager {
+                        CreateChannelFloatingButton()
+                            .padding(.trailing, TabbedScreenLayout.floatingButtonTrailingInset)
+                            .padding(.bottom, TabbedScreenLayout.floatingButtonBottomInset(safeAreaBottom: safeAreaBottom))
+                    }
+                }
+                .refreshable {
+                    await viewModel.refreshChannels()
+                }
+                .task {
+                    await viewModel.loadChannels()
+                }
+                .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+                    Button("OK") {
+                        viewModel.errorMessage = nil
+                    }
+                } message: {
+                    Text(viewModel.errorMessage ?? "")
                 }
             }
-            .refreshable {
-                await viewModel.refreshChannels()
-            }
-            .task {
-                await viewModel.loadChannels()
-            }
-            .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") {
-                    viewModel.errorMessage = nil
+            .sheet(isPresented: $showingChannelDetail) {
+                if let channel = selectedChannel {
+                    ChannelDetailView(channel: channel)
                 }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
             }
-        }
-        .sheet(isPresented: $showingChannelDetail) {
-            if let channel = selectedChannel {
-                ChannelDetailView(channel: channel)
+            .sheet(isPresented: $showingCreateChannel) {
+                CreateChannelView()
             }
-        }
-        .sheet(isPresented: $showingCreateChannel) {
-            CreateChannelView()
         }
     }
 
@@ -63,9 +69,9 @@ struct ChannelsView: View {
                 .fontWeight(.semibold)
             Spacer()
         }
-        .padding(.horizontal)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.horizontal, TabbedScreenLayout.headerHorizontalPadding)
+        .padding(.top, TabbedScreenLayout.headerTopPadding)
+        .padding(.bottom, TabbedScreenLayout.headerBottomPadding)
     }
     
     // MARK: - Search Bar
@@ -84,42 +90,44 @@ struct ChannelsView: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(10)
-        .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.horizontal, TabbedScreenLayout.headerHorizontalPadding)
+        .padding(.top, TabbedScreenLayout.sectionTopSpacing)
     }
     
     // MARK: - Channels List
     @ViewBuilder
-    private func ChannelsList() -> some View {
-        if viewModel.isLoading && viewModel.channels.isEmpty {
-            LoadingStateView()
-        } else if viewModel.channels.isEmpty {
-            EmptyStateView()
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(viewModel.filteredChannels) { channel in
-                        ChannelRowView(
-                            channel: channel,
-                            onTap: {
-                                selectedChannel = channel
-                                showingChannelDetail = true
-                            },
-                            onCallTap: {
-                                Task {
-                                    await callManager.startCall(to: channel.id, isEmergency: channel.isEmergencyChannel)
+    private func ChannelsList(bottomInset: CGFloat) -> some View {
+        Group {
+            if viewModel.isLoading && viewModel.channels.isEmpty {
+                LoadingStateView()
+            } else if viewModel.channels.isEmpty {
+                EmptyStateView()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(viewModel.filteredChannels) { channel in
+                            ChannelRowView(
+                                channel: channel,
+                                onTap: {
+                                    selectedChannel = channel
+                                    showingChannelDetail = true
+                                },
+                                onCallTap: {
+                                    Task {
+                                        await callManager.startCall(to: channel.id, isEmergency: channel.isEmergencyChannel)
+                                    }
                                 }
-                            }
-                        )
-                        .transition(.scale.combined(with: .opacity))
+                            )
+                            .transition(.scale.combined(with: .opacity))
+                        }
                     }
+                    .padding(.horizontal, TabbedScreenLayout.headerHorizontalPadding)
+                    .padding(.bottom, TabbedScreenLayout.floatingButtonListClearance)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 100) // フローティングボタンのスペース
             }
-            .safeAreaInset(edge: .bottom) {
-                Color.clear.frame(height: 96)
-            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: bottomInset)
         }
     }
     

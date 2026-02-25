@@ -7,44 +7,49 @@ struct SettingsView: View {
     @State private var showingAbout = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                ScreenHeader()
+        // 3画面共通のタブバー余白計算を適用して下部の詰まりを防ぐ
+        GeometryReader { geometry in
+            let bottomInset = TabbedScreenLayout.contentBottomInset(safeAreaBottom: geometry.safeAreaInsets.bottom)
 
-                List {
-                    // ユーザー情報セクション
-                    UserInfoSection()
-                    
-                    // 音声設定セクション
-                    AudioSettingsSection()
-                    
-                    // アプリ設定セクション
-                    AppSettingsSection()
-                    
-                    // アカウント管理セクション
-                    AccountSection()
-                    
-                    // 情報セクション
-                    InfoSection()
-                }
-                .safeAreaInset(edge: .bottom) {
-                    Color.clear.frame(height: 96)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .navigationBarHidden(true)
-            .alert("ログアウト", isPresented: $showingLogoutConfirmation) {
-                Button("キャンセル", role: .cancel) { }
-                Button("ログアウト", role: .destructive) {
-                    Task {
-                        await authManager.logout()
+            NavigationView {
+                VStack(spacing: 0) {
+                    ScreenHeader()
+
+                    List {
+                        // ユーザー情報セクション
+                        UserInfoSection()
+                        
+                        // 音声設定セクション
+                        AudioSettingsSection()
+                        
+                        // アプリ設定セクション
+                        AppSettingsSection()
+                        
+                        // アカウント管理セクション
+                        AccountSection()
+                        
+                        // 情報セクション
+                        InfoSection()
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear.frame(height: bottomInset)
                     }
                 }
-            } message: {
-                Text("ログアウトしてもよろしいですか？")
-            }
-            .sheet(isPresented: $showingAbout) {
-                AboutView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .navigationBarHidden(true)
+                .alert("ログアウト", isPresented: $showingLogoutConfirmation) {
+                    Button("キャンセル", role: .cancel) { }
+                    Button("ログアウト", role: .destructive) {
+                        Task {
+                            await authManager.logout()
+                        }
+                    }
+                } message: {
+                    Text("ログアウトしてもよろしいですか？")
+                }
+                .sheet(isPresented: $showingAbout) {
+                    AboutView()
+                }
             }
         }
     }
@@ -57,9 +62,9 @@ struct SettingsView: View {
                 .fontWeight(.semibold)
             Spacer()
         }
-        .padding(.horizontal)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.horizontal, TabbedScreenLayout.headerHorizontalPadding)
+        .padding(.top, TabbedScreenLayout.headerTopPadding)
+        .padding(.bottom, TabbedScreenLayout.headerBottomPadding)
     }
     
     // MARK: - User Info Section

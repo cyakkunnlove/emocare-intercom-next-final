@@ -8,45 +8,50 @@ struct CallHistoryView: View {
     @State private var showingFilterOptions = false
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                ScreenHeader()
+        // Channels/Settings と同じロジックでタブバー下余白を動的計算する
+        GeometryReader { geometry in
+            let bottomInset = TabbedScreenLayout.contentBottomInset(safeAreaBottom: geometry.safeAreaInsets.bottom)
 
-                // 検索・フィルターバー
-                SearchAndFilterBar()
-                
-                // 統計サマリー
-                StatisticsSummaryView()
-                
-                // 通話履歴リスト
-                CallHistoryListView()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .navigationBarHidden(true)
-            .refreshable {
-                await viewModel.refreshCallHistory()
-            }
-            .task {
-                await viewModel.loadCallHistory()
-            }
-            .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") {
-                    viewModel.errorMessage = nil
+            NavigationView {
+                VStack(spacing: 0) {
+                    ScreenHeader()
+
+                    // 検索・フィルターバー
+                    SearchAndFilterBar()
+                    
+                    // 統計サマリー
+                    StatisticsSummaryView()
+                    
+                    // 通話履歴リスト
+                    CallHistoryListView(bottomInset: bottomInset)
                 }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
-        }
-        .actionSheet(isPresented: $showingFilterOptions) {
-            ActionSheet(
-                title: Text("フィルター"),
-                buttons: CallHistoryFilter.allCases.map { filter in
-                    .default(Text(filter.displayName)) {
-                        selectedFilter = filter
-                        viewModel.applyFilter(filter)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .navigationBarHidden(true)
+                .refreshable {
+                    await viewModel.refreshCallHistory()
+                }
+                .task {
+                    await viewModel.loadCallHistory()
+                }
+                .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+                    Button("OK") {
+                        viewModel.errorMessage = nil
                     }
-                } + [.cancel()]
-            )
+                } message: {
+                    Text(viewModel.errorMessage ?? "")
+                }
+            }
+            .actionSheet(isPresented: $showingFilterOptions) {
+                ActionSheet(
+                    title: Text("フィルター"),
+                    buttons: CallHistoryFilter.allCases.map { filter in
+                        .default(Text(filter.displayName)) {
+                            selectedFilter = filter
+                            viewModel.applyFilter(filter)
+                        }
+                    } + [.cancel()]
+                )
+            }
         }
     }
 
@@ -58,9 +63,9 @@ struct CallHistoryView: View {
                 .fontWeight(.semibold)
             Spacer()
         }
-        .padding(.horizontal)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.horizontal, TabbedScreenLayout.headerHorizontalPadding)
+        .padding(.top, TabbedScreenLayout.headerTopPadding)
+        .padding(.bottom, TabbedScreenLayout.headerBottomPadding)
     }
     
     // MARK: - Search and Filter Bar
@@ -115,8 +120,8 @@ struct CallHistoryView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.horizontal, TabbedScreenLayout.headerHorizontalPadding)
+        .padding(.top, TabbedScreenLayout.sectionTopSpacing)
     }
     
     // MARK: - Statistics Summary
@@ -163,28 +168,31 @@ struct CallHistoryView: View {
     
     // MARK: - Call History List
     @ViewBuilder
-    private func CallHistoryListView() -> some View {
-        if viewModel.isLoading && viewModel.filteredCalls.isEmpty {
-            LoadingStateView()
-        } else if viewModel.filteredCalls.isEmpty {
-            EmptyStateView()
-        } else {
-            List {
-                ForEach(groupedCalls, id: \.key) { section in
-                    Section(header: Text(section.key)) {
-                        ForEach(section.value) { call in
-                            CallRowView(call: call)
-                                .contextMenu {
-                                    CallContextMenu(call: call)
+    private func CallHistoryListView(bottomInset: CGFloat) -> some View {
+        Group {
+            if viewModel.isLoading && viewModel.filteredCalls.isEmpty {
+                LoadingStateView()
+            } else if viewModel.filteredCalls.isEmpty {
+                EmptyStateView()
+            } else {
+                List {
+                    ForEach(groupedCalls, id: \.key) { section in
+                        Section(header: Text(section.key)) {
+                            ForEach(section.value) { call in
+                                CallRowView(call: call)
+                                    .contextMenu {
+                                        CallContextMenu(call: call)
+                                    }
                                 }
+                            }
                         }
                     }
                 }
+                .listStyle(PlainListStyle())
             }
-            .listStyle(PlainListStyle())
-            .safeAreaInset(edge: .bottom) {
-                Color.clear.frame(height: 96)
-            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: bottomInset)
         }
     }
     
